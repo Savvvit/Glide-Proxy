@@ -35,9 +35,9 @@
 
 ```bash
 # Загрузите скрипт на сервер
-wget https://your-server.com/universal-proxy-installer.sh
+wget https://raw.githubusercontent.com/savvvit/glide-proxy/main/universal-proxy-installer.sh
 # или
-curl -O https://your-server.com/universal-proxy-installer.sh
+curl -O https://raw.githubusercontent.com/savvvit/glide-proxy/main/universal-proxy-installer.sh
 
 # Сделайте исполняемым
 chmod +x universal-proxy-installer.sh
@@ -49,6 +49,7 @@ sudo ./universal-proxy-installer.sh
 Скрипт запросит следующие параметры:
 - **Домен прокси** (например, `proxy.example.com`)
 - **Целевой домен** (например, `old.example.com`)
+- **Сервер прокси** (например, `node1.proxy.example.com`)
 - **Email для SSL** (например, `admin@example.com`)
 - **Имя проекта** (например, `my-proxy`)
 
@@ -64,6 +65,7 @@ sudo ./universal-proxy-installer.sh
 # Установите переменные окружения
 export PROXY_DOMAIN="proxy.example.com"
 export TARGET_DOMAIN="old.example.com"
+export SERVER_DOMAIN="proxy.example.com"
 export SSL_EMAIL="admin@example.com"
 export PROJECT_NAME="my-proxy"
 
@@ -81,9 +83,10 @@ sudo ./universal-proxy-installer.sh
 ### 3. One-liner установка
 
 ```bash
-curl -sSL https://your-server.com/universal-proxy-installer.sh | \
+curl -sSL https://raw.githubusercontent.com/savvvit/glide-proxy/main/universal-proxy-installer.sh | \
 PROXY_DOMAIN="proxy.example.com" \
 TARGET_DOMAIN="old.example.com" \
+SERVER_DOMAIN="proxy.example.com" \
 SSL_EMAIL="admin@example.com" \
 PROJECT_NAME="my-proxy" \
 AUTO_CONFIRM="yes" \
@@ -97,6 +100,7 @@ sudo bash
 ```bash
 export PROXY_DOMAIN="proxy.mysite.com"
 export TARGET_DOMAIN="old.mysite.com"
+export SERVER_DOMAIN="proxy.mysite.com"
 export SSL_EMAIL="webmaster@mysite.com"
 export PROJECT_NAME="mysite-proxy"
 sudo ./universal-proxy-installer.sh
@@ -107,6 +111,7 @@ sudo ./universal-proxy-installer.sh
 ```bash
 export PROXY_DOMAIN="api-proxy.company.com"
 export TARGET_DOMAIN="legacy-api.company.com"
+export SERVER_DOMAIN="api-proxy.company.com"
 export SSL_EMAIL="devops@company.com"
 export PROJECT_NAME="api-proxy"
 export NODE_PORT="8080"
@@ -121,6 +126,7 @@ sudo ./universal-proxy-installer.sh
 export PROXY_DOMAIN="secure.example.com"
 export TARGET_DOMAIN="internal.example.com"
 export TARGET_PROTOCOL="http"
+export SERVER_DOMAIN="secure.example.com"
 export SSL_EMAIL="security@example.com"
 export PROJECT_NAME="secure-proxy"
 sudo ./universal-proxy-installer.sh
@@ -141,7 +147,7 @@ sudo ./universal-proxy-installer.sh
 
 ### DNS настройка
 Перед запуском убедитесь, что:
-- DNS записи для `PROXY_DOMAIN` указывают на ваш сервер
+- DNS записи для `SERVER_DOMAIN` указывают на ваш сервер
 - Домен доступен по HTTP (для Let's Encrypt challenge)
 
 ## Что происходит во время установки
@@ -186,7 +192,7 @@ cd /opt/your-project-name
 pm2 monit
 
 # Health check
-curl https://your-proxy-domain.com/health
+curl https://your-server-domain.com/health
 
 # nginx статус
 systemctl status nginx
@@ -194,9 +200,9 @@ systemctl status nginx
 
 ### Endpoints
 - **Main Proxy**: `https://your-proxy-domain.com/`
-- **Health Check**: `https://your-proxy-domain.com/health`
-- **Detailed Health**: `https://your-proxy-domain.com/health/detailed`  
-- **nginx Health**: `https://your-proxy-domain.com/nginx-health`
+- **Health Check**: `https://your-server-domain.com/health`
+- **Detailed Health**: `https://your-server-domain.com/health/detailed`  
+- **nginx Health**: `https://your-server-domain.com/nginx-health`
 
 ## Настройка и кастомизация
 
