@@ -2,8 +2,8 @@
 
 # Universal Reverse Proxy Installer - МИНИМАЛЬНАЯ СТАБИЛЬНАЯ ВЕРСИЯ
 # Автоматическое развертывание Node.js reverse proxy с HTTPS
-# Версия: 1.3
-# Автор: Proxy Deployment System
+# Версия: 1.4
+# Автор: Savvvit
 #
 # Использование:
 #   1. Интерактивный режим:
@@ -12,6 +12,7 @@
 #   2. Автоматический режим (через переменные окружения):
 #      export PROXY_DOMAIN="proxy.example.com"
 #      export TARGET_DOMAIN="old.example.com"
+#      export SERVER_DOMAIN="proxy.example.com"
 #      export SSL_EMAIL="admin@example.com"
 #      export PROJECT_NAME="my-proxy"
 #      sudo ./universal-proxy-installer.sh
@@ -84,6 +85,7 @@ if [ -z "$PROXY_DOMAIN" ]; then
     echo
     read -p "Введите домен прокси (например, proxy.example.com): " PROXY_DOMAIN
     read -p "Введите целевой домен (например, old.example.com): " TARGET_DOMAIN
+    read -p "Введите домен прокси (например, proxy.example.com): " SERVER_DOMAIN
     read -p "Введите email для SSL сертификата: " SSL_EMAIL
     read -p "Введите имя проекта (например, my-proxy): " PROJECT_NAME
     
@@ -104,13 +106,14 @@ if [ -z "$PROXY_DOMAIN" ]; then
 fi
 
 # Валидация обязательных параметров
-if [ -z "$PROXY_DOMAIN" ] || [ -z "$TARGET_DOMAIN" ] || [ -z "$SSL_EMAIL" ]; then
+if [ -z "$PROXY_DOMAIN" ] || [ -z "$TARGET_DOMAIN" ] || [ -z "$SERVER_DOMAIN" ] || [ -z "$SSL_EMAIL" ]; then
     log_error "Не указаны обязательные параметры"
-    echo "Обязательные переменные: PROXY_DOMAIN, TARGET_DOMAIN, SSL_EMAIL"
+    echo "Обязательные переменные: PROXY_DOMAIN, TARGET_DOMAIN, SERVER_DOMAIN, SSL_EMAIL"
     echo
     echo "Пример использования через переменные окружения:"
     echo "export PROXY_DOMAIN=\"proxy.example.com\""
     echo "export TARGET_DOMAIN=\"old.example.com\""
+    echo "export SERVER_DOMAIN=\"proxy.example.com\""
     echo "export SSL_EMAIL=\"admin@example.com\""
     echo "export PROJECT_NAME=\"my-proxy\""
     echo "sudo $0"
@@ -127,14 +130,15 @@ PROJECT_NAME=${PROJECT_NAME:-reverse-proxy}
 # Отображение конфигурации
 echo
 echo -e "${GREEN}=== КОНФИГУРАЦИЯ РАЗВЕРТЫВАНИЯ ===${NC}"
-echo "Домен прокси:      $PROXY_DOMAIN"
-echo "Целевой домен:     $TARGET_DOMAIN"
-echo "Email для SSL:     $SSL_EMAIL"
-echo "Имя проекта:       $PROJECT_NAME"
-echo "Порт Node.js:      $NODE_PORT"
-echo "Протокол цели:     $TARGET_PROTOCOL"
-echo "Лимит памяти:      $MAX_MEMORY"
-echo "Лимит запросов:    $RATE_LIMIT/сек"
+echo "Домен прокси:         $PROXY_DOMAIN"
+echo "Целевой домен:        $TARGET_DOMAIN"
+echo "Имя сервера для SSL:  $SERVER_DOMAIN"
+echo "Email для SSL:        $SSL_EMAIL"
+echo "Имя проекта:          $PROJECT_NAME"
+echo "Порт Node.js:         $NODE_PORT"
+echo "Протокол цели:        $TARGET_PROTOCOL"
+echo "Лимит памяти:         $MAX_MEMORY"
+echo "Лимит запросов:       $RATE_LIMIT/сек"
 echo
 
 if [ -z "$AUTO_CONFIRM" ]; then
@@ -260,6 +264,7 @@ PORT=$NODE_PORT
 PROXY_DOMAIN=$PROXY_DOMAIN
 TARGET_DOMAIN=$TARGET_DOMAIN
 TARGET_PROTOCOL=$TARGET_PROTOCOL
+SERVER_DOMAIN=$SERVER_DOMAIN
 
 # Логирование
 LOG_LEVEL=info
@@ -286,10 +291,12 @@ const PORT = process.env.PORT || 3000;
 const TARGET_PROTOCOL = process.env.TARGET_PROTOCOL || 'https';
 const TARGET_DOMAIN = process.env.TARGET_DOMAIN;
 const PROXY_DOMAIN = process.env.PROXY_DOMAIN;
+const SERVER_DOMAIN = process.env.SERVER_DOMAIN;
 
 console.log('Starting minimal proxy with enhanced stability...');
 console.log(`Target: ${TARGET_PROTOCOL}://${TARGET_DOMAIN}`);
 console.log(`Proxy: ${PROXY_DOMAIN}`);
+console.log(`ProxyServer: ${SERVER_DOMAIN}`);
 
 // Simple proxy with direct header handling for maximum stability
 app.use('/', createProxyMiddleware({
@@ -412,7 +419,7 @@ limit_conn_zone $binary_remote_addr zone=PROJECT_NAME_PLACEHOLDER_conn:10m;
 # HTTP to HTTPS redirect
 server {
     listen 80;
-    server_name PROXY_DOMAIN_PLACEHOLDER;
+    server_name PROXY_DOMAIN_PLACEHOLDER SERVER_DOMAIN_PLACEHOLDER;
     
     # Let's Encrypt challenge
     location /.well-known/acme-challenge/ {
@@ -428,7 +435,7 @@ server {
 # HTTPS server
 server {
     listen 443 ssl http2;
-    server_name PROXY_DOMAIN_PLACEHOLDER;
+    server_name PROXY_DOMAIN_PLACEHOLDER SERVER_DOMAIN_PLACEHOLDER;
     
     # Client settings
     client_max_body_size 10M;
@@ -436,8 +443,8 @@ server {
     client_header_timeout 30s;
     
     # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/PROXY_DOMAIN_PLACEHOLDER/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/PROXY_DOMAIN_PLACEHOLDER/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/SERVER_DOMAIN_PLACEHOLDER/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/SERVER_DOMAIN_PLACEHOLDER/privkey.pem;
     
     # SSL Security
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -535,6 +542,7 @@ EOF
     # Заменяем плейсхолдеры на реальные значения
     sed -i "s/PROXY_DOMAIN_PLACEHOLDER/$PROXY_DOMAIN/g" "$PROJECT_DIR/config/nginx-proxy.conf"
     sed -i "s/PROJECT_NAME_PLACEHOLDER/$PROJECT_NAME/g" "$PROJECT_DIR/config/nginx-proxy.conf"
+    sed -i "s/SERVER_DOMAIN_PLACEHOLDER/$SERVER_DOMAIN/g" "$PROJECT_DIR/config/nginx-proxy.conf"
     sed -i "s/NODE_PORT_PLACEHOLDER/$NODE_PORT/g" "$PROJECT_DIR/config/nginx-proxy.conf"
     sed -i "s/RATE_LIMIT_PLACEHOLDER/$RATE_LIMIT/g" "$PROJECT_DIR/config/nginx-proxy.conf"
 }
@@ -555,7 +563,7 @@ log_info "Настройка SSL сертификата..."
 cat > /etc/nginx/sites-available/$PROJECT_NAME-temp << EOF
 server {
     listen 80;
-    server_name $PROXY_DOMAIN;
+    server_name $PROXY_DOMAIN $SERVER_DOMAIN;
     
     location /.well-known/acme-challenge/ {
         root /var/www/html;
@@ -582,7 +590,7 @@ mkdir -p /var/www/html
 
 # Получение SSL сертификата
 log_info "Получение SSL сертификата от Let's Encrypt..."
-certbot certonly --webroot -w /var/www/html -d $PROXY_DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+certbot certonly --webroot -w /var/www/html -d $SERVER_DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
 check_status "SSL сертификат получен" "Ошибка получения SSL сертификата"
 
 # Удаление временной конфигурации
@@ -657,10 +665,10 @@ echo "nginx Status:"
 systemctl status nginx --no-pager -l
 echo
 echo "SSL Certificate:"
-certbot certificates | grep -A 5 "$PROXY_DOMAIN"
+certbot certificates | grep -A 5 "$SERVER_DOMAIN"
 echo
 echo "Health Check:"
-curl -s https://$PROXY_DOMAIN/health | jq . 2>/dev/null || curl -s https://$PROXY_DOMAIN/health
+curl -s https://$SERVER_DOMAIN/health | jq . 2>/dev/null || curl -s https://$SERVER_DOMAIN/health
 EOF
 
     # Скрипт перезапуска
@@ -684,7 +692,7 @@ EOF
     # Скрипт обновления SSL
     cat > $PROJECT_DIR/scripts/renew-ssl.sh << EOF
 #!/bin/bash
-echo "Renewing SSL certificate for $PROXY_DOMAIN..."
+echo "Renewing SSL certificate for $SERVER_DOMAIN..."
 certbot renew --quiet
 systemctl reload nginx
 echo "SSL renewal completed"
@@ -710,6 +718,7 @@ cat > $PROJECT_DIR/README.md << EOF
 
 - **Домен прокси**: $PROXY_DOMAIN
 - **Целевой домен**: $TARGET_DOMAIN
+- **Сервер прокси**: $SERVER_DOMAIN
 - **Порт Node.js**: $NODE_PORT
 - **Протокол цели**: $TARGET_PROTOCOL
 - **Лимит памяти**: $MAX_MEMORY
@@ -759,9 +768,9 @@ cat > $PROJECT_DIR/README.md << EOF
 ## Endpoints
 
 - **Main Proxy**: https://$PROXY_DOMAIN/
-- **Health Check**: https://$PROXY_DOMAIN/health
-- **Detailed Health**: https://$PROXY_DOMAIN/health/detailed
-- **nginx Health**: https://$PROXY_DOMAIN/nginx-health
+- **Health Check**: https://$SERVER_DOMAIN/health
+- **Detailed Health**: https://$SERVER_DOMAIN/health/detailed
+- **nginx Health**: https://$SERVER_DOMAIN/nginx-health
 
 ## Файлы конфигурации
 
@@ -786,7 +795,7 @@ pm2 monit
 
 ### Health Check
 \`\`\`bash
-curl https://$PROXY_DOMAIN/health
+curl https://$SERVER_DOMAIN/health
 \`\`\`
 
 ### SSL Certificate Status
@@ -855,7 +864,7 @@ fi
 
 # Проверка HTTP redirect
 log_info "Проверка HTTP → HTTPS redirect..."
-if curl -I "http://$PROXY_DOMAIN/" 2>/dev/null | grep -q "301"; then
+if curl -I "http://$SERVER_DOMAIN/" 2>/dev/null | grep -q "301"; then
     log_success "HTTP redirect работает"
 else
     log_warning "HTTP redirect может не работать"
@@ -863,7 +872,7 @@ fi
 
 # Проверка HTTPS
 log_info "Проверка HTTPS endpoint..."
-if curl -k -s "https://$PROXY_DOMAIN/nginx-health" | grep -q "nginx healthy"; then
+if curl -k -s "https://$SERVER_DOMAIN/nginx-health" | grep -q "nginx healthy"; then
     log_success "HTTPS endpoint работает"
 else
     log_warning "HTTPS endpoint может не работать"
@@ -871,7 +880,7 @@ fi
 
 # Проверка health check
 log_info "Проверка health check..."
-if curl -k -s "https://$PROXY_DOMAIN/health" | grep -q "status"; then
+if curl -k -s "https://$SERVER_DOMAIN/health" | grep -q "status"; then
     log_success "Health check работает"
 else
     log_warning "Health check может не работать"
@@ -888,15 +897,16 @@ echo
 echo -e "${YELLOW}📋 Информация о развертывании:${NC}"
 echo "   • Домен прокси:    https://$PROXY_DOMAIN"
 echo "   • Целевой домен:   $TARGET_PROTOCOL://$TARGET_DOMAIN"
+echo "   • Сервер прокси:   https://$SERVER_DOMAIN"
 echo "   • Проект:          $PROJECT_NAME"
 echo "   • Директория:      $PROJECT_DIR"
 echo "   • Стабильность:    Повышенная совместимость включена"
 echo
 echo -e "${YELLOW}🔗 Endpoints:${NC}"
 echo "   • Main Proxy:      https://$PROXY_DOMAIN/"
-echo "   • Health Check:    https://$PROXY_DOMAIN/health"
-echo "   • Detailed Health: https://$PROXY_DOMAIN/health/detailed"
-echo "   • nginx Health:    https://$PROXY_DOMAIN/nginx-health"
+echo "   • Health Check:    https://$SERVER_DOMAIN/health"
+echo "   • Detailed Health: https://$SERVER_DOMAIN/health/detailed"
+echo "   • nginx Health:    https://$SERVER_DOMAIN/nginx-health"
 echo
 echo -e "${YELLOW}🛠 Управление:${NC}"
 echo "   • Статус:          $PROJECT_DIR/scripts/status.sh"
@@ -915,7 +925,7 @@ echo "   • Оптимизированная nginx конфигурация"
 echo
 echo -e "${GREEN}✅ Все сервисы запущены и готовы к работе!${NC}"
 echo
-echo -e "${CYAN}Для тестирования откройте в браузере: https://$PROXY_DOMAIN${NC}"
+echo -e "${CYAN}Для тестирования откройте в браузере: https://$SERVER_DOMAIN${NC}"
 echo
 
 log_success "Minimal Universal Reverse Proxy успешно установлен и настроен!" 
