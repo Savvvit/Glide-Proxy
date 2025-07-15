@@ -22,7 +22,7 @@
 ### Интерактивная установка
 ```bash
 # Скачайте установщик
-curl -O https://raw.githubusercontent.com/bramox/glideproxy/main/universal-proxy-installer.sh
+curl -O https://raw.githubusercontent.com/savvvit/glide-proxy/main/universal-proxy-installer.sh
 
 # Запустите установку
 chmod +x universal-proxy-installer.sh
@@ -33,6 +33,7 @@ sudo ./universal-proxy-installer.sh
 ```bash
 export PROXY_DOMAIN="proxy.example.com"
 export TARGET_DOMAIN="old.example.com"
+export SERVER_DOMAIN="proxy.example.com"
 export SSL_EMAIL="admin@example.com"
 export PROJECT_NAME="my-proxy"
 sudo ./universal-proxy-installer.sh
@@ -40,9 +41,10 @@ sudo ./universal-proxy-installer.sh
 
 ### One-liner установка
 ```bash
-curl -sSL https://raw.githubusercontent.com/bramox/glideproxy/main/universal-proxy-installer.sh | \
+curl -sSL https://raw.githubusercontent.com/savvvit/glide-proxy/main/universal-proxy-installer.sh | \
 PROXY_DOMAIN="proxy.example.com" \
 TARGET_DOMAIN="old.example.com" \
+SERVER_DOMAIN="proxy.example.com" \
 SSL_EMAIL="admin@example.com" \
 sudo bash
 ```
@@ -59,6 +61,7 @@ sudo bash
 ### Обязательные параметры
 - `PROXY_DOMAIN` - ваш домен прокси (например, proxy.example.com)
 - `TARGET_DOMAIN` - целевой домен (например, old.example.com)
+- `SERVER_DOMAIN` - ваш сервер прокси (например, node1.proxy.example.com)
 - `SSL_EMAIL` - email для Let's Encrypt сертификата
 
 ### Опциональные параметры
@@ -185,6 +188,7 @@ tail -f /opt/your-project-name/logs/app-*.log
 ```bash
 export PROXY_DOMAIN="proxy.mysite.com"
 export TARGET_DOMAIN="old.mysite.com"
+export SERVER_DOMAIN="proxy.mysite.com"
 export SSL_EMAIL="webmaster@mysite.com"
 sudo ./universal-proxy-installer.sh
 ```
@@ -193,6 +197,7 @@ sudo ./universal-proxy-installer.sh
 ```bash
 export PROXY_DOMAIN="api-proxy.company.com"
 export TARGET_DOMAIN="legacy-api.company.com"
+export SERVER_DOMAIN="api-proxy.company.com"
 export SSL_EMAIL="devops@company.com"
 export NODE_PORT="8080"
 export MAX_MEMORY="1G"
@@ -204,6 +209,7 @@ sudo ./universal-proxy-installer.sh
 ```bash
 export PROXY_DOMAIN="secure.example.com"
 export TARGET_DOMAIN="internal.example.com"
+export SERVER_DOMAIN="secure.example.com"
 export TARGET_PROTOCOL="http"
 export SSL_EMAIL="security@example.com"
 sudo ./universal-proxy-installer.sh
@@ -234,7 +240,7 @@ curl -I https://your-target-domain.com
 ## 📚 Документация
 
 - **[USAGE.md](USAGE.md)** - Подробная инструкция по использованию
-- **[memory_bank/tasks.md](memory_bank/tasks.md)** - История разработки и технические детали
+- **[CHANGELOG.md](FIXES-v1.1.md)** - История разработки и технические детали
 
 ## 🤝 Поддержка
 
